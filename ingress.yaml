@@ -1,0 +1,193 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openim-ingress
+  namespace: openim
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "100"
+    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "60"
+    nginx.ingress.kubernetes.io/upstream-keepalive-requests: "1000"
+spec:
+  ingressClassName: nginx
+  rules:
+  # OpenIM Web Frontend (H5)
+  - host: h5-openim.36x9.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openim-web-front
+            port:
+              number: 80
+  # OpenIM Admin Frontend
+  - host: admin-openim.36x9.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openim-admin-front
+            port:
+              number: 80
+---
+# Ingress for OpenIM Server API
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openim-server-ingress
+  namespace: openim
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api-openim.36x9.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openim-server
+            port:
+              number: 10002
+---
+# Ingress for OpenIM Chat API
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openim-chat-ingress
+  namespace: openim
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: chat-openim.36x9.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openim-chat
+            port:
+              number: 10008
+---
+# Service for OpenIM Web Frontend (Node IP Backend)
+apiVersion: v1
+kind: Service
+metadata:
+  name: openim-web-front
+  namespace: openim
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 11001
+    protocol: TCP
+---
+# Endpoints for OpenIM Web Frontend
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: openim-web-front
+  namespace: openim
+subsets:
+  - addresses:
+    - ip: 10.88.88.13
+    ports:
+    - port: 11001
+---
+# Service for OpenIM Admin Frontend (Node IP Backend)
+apiVersion: v1
+kind: Service
+metadata:
+  name: openim-admin-front
+  namespace: openim
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 11002
+    protocol: TCP
+---
+# Endpoints for OpenIM Admin Frontend
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: openim-admin-front
+  namespace: openim
+subsets:
+  - addresses:
+    - ip: 10.88.88.13
+    ports:
+    - port: 11002
+---
+# Service for OpenIM Server API (Node IP Backend)
+apiVersion: v1
+kind: Service
+metadata:
+  name: openim-server
+  namespace: openim
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10002
+    targetPort: 10002
+    protocol: TCP
+---
+# Endpoints for OpenIM Server API
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: openim-server
+  namespace: openim
+subsets:
+  - addresses:
+    - ip: 10.88.88.13
+    ports:
+    - port: 10002
+---
+# Service for OpenIM Chat API (Node IP Backend)
+apiVersion: v1
+kind: Service
+metadata:
+  name: openim-chat
+  namespace: openim
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10008
+    targetPort: 10008
+    protocol: TCP
+---
+# Endpoints for OpenIM Chat API
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: openim-chat
+  namespace: openim
+subsets:
+  - addresses:
+    - ip: 10.88.88.13
+    ports:
+    - port: 10008
